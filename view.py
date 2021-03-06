@@ -33,6 +33,11 @@ class View():
     def __init__(self):
         self.names = locals()
         self.setup_windows()
+        self.refresh()
+        self.win.mainloop()
+        return None
+
+    def refresh(self):
         self.setup_canvas()
         scrapy = Scrapy(url, headers=headers)
         scrapy.get_pokemon_data()
@@ -40,8 +45,8 @@ class View():
         for pokemon in scrapy.pokemon_array:
             self.get_cells(pokemon)
             self.index += 1
-        self.win.mainloop()
-        return None
+        self.win.update()
+        return None   
 
     def setup_windows(self):
         self.win = tk.Tk() 
@@ -52,33 +57,41 @@ class View():
         return None
 
     def setup_canvas(self):
-        self.frame = tk.Frame(self.win, width = 500, height = 5000)
+        self.bias = 20
+        self.frame = tk.Frame(self.win, width = 500, height = 5000 + self.bias)
         self.frame.grid(row = 0, column = 0)
-        self.canvas=tk.Canvas(self.frame, bg = '#323232', width = 500,
-            height = 500, scrollregion = (0, 0, 500, 5000))
+        self.canvas = tk.Canvas(self.frame, bg = '#323232', width = 500,
+            height = 500, scrollregion = (0, 0, 500, 5000 + self.bias))
         vbar = tk.Scrollbar(self.frame, orient = tk.VERTICAL)
         vbar.pack(side = tk.RIGHT,fill = tk.Y)
         vbar.config(command = self.canvas.yview)
         self.canvas.config(width = 500, height = 500)
         self.canvas.config(yscrollcommand = vbar.set)
         self.canvas.pack(side = tk.LEFT, expand = True, fill = tk.BOTH)
+
+        self.refresh_button = tk.Button(self.win, text = "Refresh",
+            font ='微軟正黑體 15', fg = "black")
+        self.refresh_button.config(
+            command = lambda : self.refresh())
+        self.canvas.create_window(
+            450, 20, window = self.refresh_button)
         return None
 
     def get_cells(self, pokemon):
-        self.canvas.create_image(50, 50 + 100 * self.index, image = pokemon.img)
-        self.canvas.create_text(150, 50 + 100 * self.index, text = pokemon.name, 
+        height = 50 + 100 * self.index + self.bias
+        self.canvas.create_image(50, height, image = pokemon.img)
+        self.canvas.create_text(150, height, text = pokemon.name, 
             font=('微軟正黑體 15'), fill = "white")
-        self.canvas.create_text(250, 50 + 100 * self.index, 
+        self.canvas.create_text(250, height, 
             text = 'LV  : ' + pokemon.lv, font=('微軟正黑體 15'), fill = "white")
-        self.canvas.create_text(350, 50 + 100 * self.index,
+        self.canvas.create_text(350, height,
             text = 'CP  : ' + pokemon.cp, font=('微軟正黑體 15'), fill = "white")
         self.names['button%s' % (self.index)] = tk.Button(self.win, text = "GPX",
             font ='微軟正黑體 15', fg = "black")
         self.names['button%s' % (self.index)].config(
             command = lambda : pokemon.get_loction(location_headers))
         self.canvas.create_window(
-            450, 50 + 100 * self.index, 
-            window = self.names['button%s' % (self.index)])
+            450, height, window = self.names['button%s' % (self.index)])
         return None
 
 if __name__ == '__main__':
